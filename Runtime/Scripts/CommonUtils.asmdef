@@ -1,0 +1,16 @@
+{
+    "name": "CommonUtils",
+    "rootNamespace": "Trackman",
+    "references": [
+        "AsyncAwaitUtil"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
