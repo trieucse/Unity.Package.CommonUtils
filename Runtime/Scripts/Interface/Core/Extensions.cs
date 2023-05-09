@@ -61,6 +61,16 @@ namespace Trackman
         {
             return (value & arg) == arg;
         }
+        public static T AddFlag<T>(this T value, T arg) where T : Enum
+        {
+            if (value.AND(arg)) return value;
+            return (T)Convert.ChangeType(Convert.ToInt32(value) + Convert.ToInt32(arg), typeof(T));
+        }
+        public static T RemoveFlag<T>(this T value, T arg) where T : Enum
+        {
+            if (value.AND(arg)) return (T)Convert.ChangeType(Convert.ToInt32(value) - Convert.ToInt32(arg), typeof(T));
+            return value;
+        }
 
         public static IEnumerable<(T item, int index)> Indexed<T>(this IEnumerable<T> enumerable)
         {
