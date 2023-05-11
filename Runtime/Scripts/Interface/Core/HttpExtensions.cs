@@ -43,6 +43,13 @@ namespace Trackman
         {
             string DebugString(byte[] response = default)
             {
+                string PrettyPrintBytes(byte[] bytes, IDictionary<string, string> headers)
+                {
+                    if (bytes is null) return "null";
+                    bool textContent = (headers is not null && headers.TryGetValue("Content-Type", out string value) && value.Contains("Application/json")) || (contentType.NotNullOrEmpty() && contentType.Contains("Application/json"));
+                    return textContent ? Encoding.UTF8.GetString(bytes) : $"<binary {bytes.Length} bytes>";
+                }
+
                 string headersString = "";
                 if (headers is not null)
                 {
@@ -57,7 +64,7 @@ namespace Trackman
                 }
 
                 string postString = "";
-                if (post is not null && post.Length < 4096) postString = $"POST:\n{Encoding.UTF8.GetString(post)}\n";
+                if (post is not null && post.Length < 4096) postString = $"POST:\n{PrettyPrintBytes(post, headers)}\n";
 
                 string responseHeadersString = "";
                 if (responseHeaders is not null)
@@ -67,7 +74,7 @@ namespace Trackman
                 }
 
                 string responseString = "";
-                if (response is not null && response.Length < 4096) responseString = $"RESPONSE:\n{Encoding.UTF8.GetString(response)}\n";
+                if (response is not null && response.Length < 4096) responseString = $"RESPONSE:\n{PrettyPrintBytes(response, responseHeaders)}\n";
 
                 string text = "";
                 if (headers is not null) text += headersString;
@@ -119,5 +126,5 @@ namespace Trackman
             }
         }
         #endregion
-    } 
+    }
 }
