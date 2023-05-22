@@ -14,6 +14,17 @@ namespace Trackman
     public static class Extensions
     {
         #region Object Methods
+        public static void DestroySafe(this Object value)
+        {
+            if (!value) return;
+#if UNITY_EDITOR
+            if (Application.isPlaying) Object.Destroy(value);
+            else Object.DestroyImmediate(value);
+#else
+            Object.Destroy(value);
+#endif
+        }
+
         public static bool ValidIndex(this int value) => value != -1;
         public static bool NotMaxValue(this uint value) => value != uint.MaxValue;
         public static bool Valid(this float value) => !float.IsNaN(value) && !float.IsInfinity(value);
