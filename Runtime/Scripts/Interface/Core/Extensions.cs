@@ -215,6 +215,7 @@ namespace Trackman
         {
             return value ? 1 : -1;
         }
+        public static Vector3 ToVector3<T>(this IReadOnlyList<T> value) => new (value[0].As<float>(), value[1].As<float>(), value[2].As<float>());
         #endregion
 
         #region List Methods
