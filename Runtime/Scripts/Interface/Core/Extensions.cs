@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -60,30 +59,18 @@ namespace Trackman
             throw new ArgumentException();
         }
 
-        public static bool ANY<T>(this T value, T arg) where T : Enum
-        {
-            return value.GetHashCode().ANY(arg.GetHashCode());
-        }
-        public static bool ANY(this int value, int arg)
-        {
-            return (value & arg) != 0;
-        }
-        public static bool AND<T>(this T value, T arg) where T : Enum
-        {
-            return value.GetHashCode().AND(arg.GetHashCode());
-        }
-        public static bool AND(this int value, int arg)
-        {
-            return (value & arg) == arg;
-        }
+        public static bool ANY<T>(this T value, T arg) where T : Enum => Convert.ToInt32(value).ANY(Convert.ToInt32(arg));
+        public static bool ANY(this int value, int arg) => (value & arg) != 0;
+        public static bool AND<T>(this T value, T arg) where T : Enum => Convert.ToInt32(value).AND(Convert.ToInt32(arg));
+        public static bool AND(this int value, int arg) => (value & arg) == arg;
         public static T AddFlag<T>(this T value, T arg) where T : Enum
         {
             if (value.AND(arg)) return value;
-            return (T)Convert.ChangeType(Convert.ToInt32(value) + Convert.ToInt32(arg), typeof(T));
+            return (T)Enum.ToObject(typeof(T), Convert.ToInt32(value) + Convert.ToInt32(arg));
         }
         public static T RemoveFlag<T>(this T value, T arg) where T : Enum
         {
-            if (value.AND(arg)) return (T)Convert.ChangeType(Convert.ToInt32(value) - Convert.ToInt32(arg), typeof(T));
+            if (value.AND(arg)) return (T)Enum.ToObject(typeof(T), Convert.ToInt32(value) - Convert.ToInt32(arg));
             return value;
         }
 
