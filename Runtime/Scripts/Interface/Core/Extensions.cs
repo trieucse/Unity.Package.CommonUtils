@@ -63,16 +63,8 @@ namespace Trackman
         public static bool ANY(this int value, int arg) => (value & arg) != 0;
         public static bool AND<T>(this T value, T arg) where T : Enum => Convert.ToInt32(value).AND(Convert.ToInt32(arg));
         public static bool AND(this int value, int arg) => (value & arg) == arg;
-        public static T AddFlag<T>(this T value, T arg) where T : Enum
-        {
-            if (value.AND(arg)) return value;
-            return (T)Enum.ToObject(typeof(T), Convert.ToInt32(value) + Convert.ToInt32(arg));
-        }
-        public static T RemoveFlag<T>(this T value, T arg) where T : Enum
-        {
-            if (value.AND(arg)) return (T)Enum.ToObject(typeof(T), Convert.ToInt32(value) - Convert.ToInt32(arg));
-            return value;
-        }
+        public static T AddFlag<T>(this T value, T arg) where T : Enum => (T)Enum.ToObject(typeof(T), Convert.ToInt32(value) | Convert.ToInt32(arg));
+        public static T RemoveFlag<T>(this T value, T arg) where T : Enum => (T)Enum.ToObject(typeof(T), Convert.ToInt32(value) & ~Convert.ToInt32(arg));
 
         public static IEnumerable<(T item, int index)> Indexed<T>(this IEnumerable<T> enumerable)
         {

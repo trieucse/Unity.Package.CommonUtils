@@ -1,9 +1,8 @@
-using System.Buffers;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
 
-namespace Trackman.PerfectEngine.Tests.Editor
+namespace Trackman.CommonUtils.Tests.Editor
 {
     public class JsonUtilityTest
     {
