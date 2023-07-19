@@ -119,6 +119,8 @@ namespace Trackman
             yield return value;
         }
 
+        public static bool IsRecord(this Type type) => (type?.Name?.EndsWith("Record") ?? false) || (type?.Namespace?.EndsWith("DataModel") ?? false);
+
         public static string PrettyTypeName(this Type type) => $"{(type.IsGenericType ? type.Name.Substring(0, type.Name.IndexOf('`')) : type.Name)}{(type.IsGenericType ? $"<{string.Join(",", type.GenericTypeArguments.Select(x => x.PrettyTypeName()))}>" : "")}";
         #endregion
 

@@ -192,6 +192,16 @@ namespace Trackman
 
                         members.Add(info);
                     }
+
+                    if (!type.IsRecord()) return;
+
+                    foreach (PropertyInfo info in type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+                    {
+                        if (info.PropertyType.IsSubclassOf(typeof(Object)) && !info.PropertyType.IsSubclassOf(typeof(MonoBehaviour))) continue;
+                        if (info.PropertyType.IsInterface) continue;
+                        if (info.GetCustomAttribute<NonSerializedAttribute>() is not null) continue;
+                        members.Add(info);
+                    }
                 }
 
                 List<MemberInfo> members = new();
@@ -201,7 +211,7 @@ namespace Trackman
             }
             protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
             {
-                if (member.MemberType == MemberTypes.Property) return null;
+                if (member.MemberType == MemberTypes.Property && !member.DeclaringType.IsRecord()) return null;
                 return base.CreateProperty(member, memberSerialization);
             }
             #endregion
