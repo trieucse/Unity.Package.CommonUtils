@@ -27,6 +27,10 @@ namespace Trackman
         string Status => string.Empty;
         bool Testable => false;
         #endregion
+
+        #region Methods
+        void InvokeOnEnable() => throw new NotSupportedException();
+        #endregion
     }
 
     public interface ITracing : ISingletonInterface
