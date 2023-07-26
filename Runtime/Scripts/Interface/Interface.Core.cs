@@ -29,7 +29,7 @@ namespace Trackman
         #endregion
 
         #region Methods
-        void InvokeOnEnable() => throw new NotSupportedException();
+        void InitializeForTests() => throw new NotSupportedException();
         #endregion
     }
 
