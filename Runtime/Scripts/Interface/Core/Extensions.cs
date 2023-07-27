@@ -140,19 +140,7 @@ namespace Trackman
             target.y = 0;
             return (target - temp).normalized;
         }
-        public static bool IsInsideXZ(this Vector3 point, Vector3[] points)
-        {
-            bool inside = false;
-            for (int i = 0, length = points.Length, j = length - 1; i < length; j = i++)
-            {
-                Vector3 a = points[i];
-                Vector3 b = points[j];
-                if (((a.z <= point.z && point.z < b.z) || (b.z <= point.z && point.z < a.z)) && (point.x < (b.x - a.x) * (point.z - a.z) / (b.z - a.z) + a.x)) inside = !inside;
-            }
-
-            return inside;
-        }
-        public static bool IsInsideXZ(this Vector3 point, List<Vector3> points)
+        public static bool IsInsideXZ<T>(this Vector3 point, T points) where T : IReadOnlyList<Vector3>
         {
             bool inside = false;
             for (int i = 0, length = points.Count, j = length - 1; i < length; j = i++)
@@ -164,19 +152,7 @@ namespace Trackman
 
             return inside;
         }
-        public static bool IsClockwise(this Vector3[] points)
-        {
-            float sum = 0;
-            for (int i = 0, count = points.Length; i < count; i++)
-            {
-                Vector3 v1 = points[i];
-                Vector3 v2 = points[(i + 1) % points.Length];
-                sum += (v2.x - v1.x) * (v2.z + v1.z);
-            }
-
-            return sum > 0;
-        }
-        public static bool IsClockwise(this List<Vector3> points)
+        public static bool IsClockwise<T>(this T points) where T : IReadOnlyList<Vector3>
         {
             float sum = 0;
             for (int i = 0, count = points.Count; i < count; i++)
