@@ -2,7 +2,7 @@
   "name": "com.trackman.commonutils",
   "description": "Common Utils for Trackman packages and apps.",
   "displayName": "Common Utils",
-  "version": "3.6.0",
+  "version": "3.7.0",
   "unity": "2021.3",
   "author": "TrackMan",
   "type": "trackman.package",
