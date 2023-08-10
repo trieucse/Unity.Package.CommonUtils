@@ -180,12 +180,17 @@ namespace Trackman
         #endregion
 
         #region List Methods
-        public static bool RemoveFast<T>(this IList<T> list, T value)
+        public static bool TryRemoveFast<T>(this IList<T> list, T value)
         {
             int index = list.IndexOf(value);
             if (index < 0) return false;
             list.RemoveFast(index);
             return true;
+        }
+        public static void RemoveFast<T>(this IList<T> list, T value)
+        {
+            int index = list.IndexOf(value);
+            list.RemoveFast(index);
         }
         public static void RemoveFast<T>(this IList<T> list, int index)
         {
