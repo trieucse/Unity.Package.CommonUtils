@@ -57,7 +57,7 @@ namespace Trackman.CourseTurf.Utility
         public GraphicsBuffer CreateBuffer<T>(string name, GraphicsBuffer.Target target, int length) where T : struct
         {
             buffers.GetValueOrDefault(name)?.ReleaseSafe();
-            GraphicsBuffer buffer = new GraphicsBuffer(target, length, UnsafeUtility.SizeOf<T>());
+            GraphicsBuffer buffer = new(target, length, UnsafeUtility.SizeOf<T>());
             AddBuffer(name, buffer);
             return buffer;
         }

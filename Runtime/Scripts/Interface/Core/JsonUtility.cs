@@ -246,8 +246,8 @@ namespace Trackman
         #region Methods
         public static string ToJson<T>(T value, bool prettyPrint)
         {
-            using (StringWriter stringWriter = new StringWriter())
-            using (JsonTextWriter jsonTextWriter = new JsonTextWriter(stringWriter) { Formatting = prettyPrint ? Formatting.Indented : Formatting.None })
+            using (StringWriter stringWriter = new())
+            using (JsonTextWriter jsonTextWriter = new(stringWriter) { Formatting = prettyPrint ? Formatting.Indented : Formatting.None })
             {
                 serializer.Serialize(jsonTextWriter, value);
                 return stringWriter.ToString();
@@ -255,8 +255,8 @@ namespace Trackman
         }
         public static T FromJson<T>(string json)
         {
-            using (StringReader stringReader = new StringReader(json))
-            using (JsonTextReader jsonTextReader = new JsonTextReader(stringReader))
+            using (StringReader stringReader = new(json))
+            using (JsonTextReader jsonTextReader = new(stringReader))
             {
                 return serializer.Deserialize<T>(jsonTextReader);
             }

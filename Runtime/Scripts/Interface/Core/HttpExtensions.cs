@@ -12,14 +12,17 @@ namespace Trackman
     public static class HttpExtensions
     {
         public const int defaultTimeout = 30;
+        public const string requestSucceeded = "ok";
+        public const string sentOk = "Sent";
+        public const string receivedOk = "Received";
 
         #region Fields
-        static List<UnityWebRequest> webRequests = new List<UnityWebRequest>(16);
+        static readonly List<UnityWebRequest> webRequests = new(16);
         #endregion
 
         #region Properties
         public static List<UnityWebRequest> WebRequests => webRequests;
-        static Lazy<ITracing> tracing = new(() => UnityEngine.Object.FindObjectsOfType<MonoBehaviour>().OfType<ITracing>().FirstOrDefault());
+        static readonly Lazy<ITracing> tracing = new(() => UnityEngine.Object.FindObjectsOfType<MonoBehaviour>().OfType<ITracing>().FirstOrDefault());
         #endregion
 
         #region Methods
@@ -89,7 +92,7 @@ namespace Trackman
                 return $"{value.downloadHandler.nativeData.Length.ToByteSize()} {value.uploadedBytes.ToByteSize()}";
             }
 
-            using var scope = tracing.Value?.Scope("HttpExtensions.HttpMethodAsync");
+            using var scope = tracing.Value?.Scope($"{nameof(HttpExtensions)}.{nameof(HttpMethodAsync)}");
             headers = tracing.Value?.Inject(tracing.Value?.Active, headers ?? new Dictionary<string, string>()) ?? headers;
 
             UnityWebRequest request = new(url, method, new DownloadHandlerBuffer(), default) { timeout = timeout };
@@ -102,6 +105,7 @@ namespace Trackman
             try
             {
                 UnityWebRequestAsyncOperation operation = request.SendWebRequest();
+                // ReSharper disable once UseAwaitUsing, because of Sentry injection limitation
                 using CancellationTokenRegistration registration = cancellationToken.Register(request.Abort);
                 await operation;
                 cancellationToken.ThrowIfCancellationRequested();
