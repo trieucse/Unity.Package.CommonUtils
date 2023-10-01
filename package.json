@@ -7,6 +7,6 @@
   "author": "TrackMan",
   "type": "trackman.package",
   "dependencies": {
-    "org.nuget.newtonsoft.json": "13.0.1"
+    "org.nuget.newtonsoft.json": "13.0.3"
   }
 }
