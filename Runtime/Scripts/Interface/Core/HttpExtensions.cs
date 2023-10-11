@@ -26,23 +26,31 @@ namespace Trackman
         #endregion
 
         #region Methods
-        public static Task<byte[]> HttpGetAsync(this string url, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
+        public static async Task<byte[]> HttpGetAsync(this string url, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
         {
-            return url.HttpMethodAsync("GET", null, headers, responseHeaders, contentType, type, timeout, cancellationToken);
+            UnityWebRequest request = await url.HttpMethodAsync("GET", null, headers, responseHeaders, contentType, type, timeout, cancellationToken);
+            return request.downloadHandler.data;
         }
-        public static Task<byte[]> HttpPostAsync(this string url, byte[] post, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
+        public static async Task<byte[]> HttpPostAsync(this string url, byte[] post, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
         {
-            return url.HttpMethodAsync("POST", post, headers, responseHeaders, contentType, type, timeout, cancellationToken);
+            UnityWebRequest request = await url.HttpMethodAsync("POST", post, headers, responseHeaders, contentType, type, timeout, cancellationToken);
+            return request.downloadHandler.data;
         }
-        public static Task<byte[]> HttpPutAsync(this string url, byte[] post, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
+        public static async Task<byte[]> HttpPutAsync(this string url, byte[] post, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
         {
-            return url.HttpMethodAsync("PUT", post, headers, responseHeaders, contentType, type, timeout, cancellationToken);
+            UnityWebRequest request = await url.HttpMethodAsync("PUT", post, headers, responseHeaders, contentType, type, timeout, cancellationToken);
+            return request.downloadHandler.data;
         }
         public static Task HttpDeleteAsync(this string url, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
         {
             return url.HttpMethodAsync("DELETE", null, headers, responseHeaders, null, type, timeout, cancellationToken);
         }
-        static async Task<byte[]> HttpMethodAsync(this string url, string method, byte[] post = default, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
+
+        public static Task<UnityWebRequest> HttpGetRequestAsync(this string url, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
+        {
+            return url.HttpMethodAsync("GET", null, headers, responseHeaders, contentType, type, timeout, cancellationToken);
+        }
+        static async Task<UnityWebRequest> HttpMethodAsync(this string url, string method, byte[] post = default, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
         {
             string DebugString(byte[] response = default)
             {
@@ -92,12 +100,14 @@ namespace Trackman
                 return $"{value.downloadHandler.nativeData.Length.ToByteSize()} {value.uploadedBytes.ToByteSize()}";
             }
 
-            using var scope = tracing.Value?.Scope($"{nameof(HttpExtensions)}.{nameof(HttpMethodAsync)}");
+            using IDisposable scope = tracing.Value?.Scope($"{nameof(HttpExtensions)}.{nameof(HttpMethodAsync)}");
             headers = tracing.Value?.Inject(tracing.Value?.Active, headers ?? new Dictionary<string, string>()) ?? headers;
 
             UnityWebRequest request = new(url, method, new DownloadHandlerBuffer(), default) { timeout = timeout };
 
-            if (headers is not null) foreach (KeyValuePair<string, string> header in headers) request.SetRequestHeader(header.Key, header.Value);
+            if (headers is not null)
+                foreach (KeyValuePair<string, string> header in headers)
+                    request.SetRequestHeader(header.Key, header.Value);
             if (post is not null) request.uploadHandler = new UploadHandlerRaw(post);
             if (contentType.NotNullOrEmpty()) request.SetRequestHeader("Content-Type", contentType);
 
@@ -113,21 +123,21 @@ namespace Trackman
             finally
             {
                 webRequests.Remove(request);
-                if (request.uploadHandler is not null) request.uploadHandler.Dispose();
+                request.uploadHandler?.Dispose();
             }
 
-            if (responseHeaders is not null) foreach (KeyValuePair<string, string> keyValue in request.GetResponseHeaders()) responseHeaders.Add(keyValue);
+            if (responseHeaders is not null)
+                foreach (KeyValuePair<string, string> keyValue in request.GetResponseHeaders())
+                    responseHeaders.Add(keyValue);
 
             if (request.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogWarning($"[{type.Nick()}] {method} {request.url} = {request.result} \n{request.responseCode}\n{request.error}\n{DebugString()}");
                 throw new Exception(request.responseCode.ToString(), new Exception(request.error));
             }
-            else
-            {
-                Debug.Log($"[{type.Nick()}] {method} {request.url} {ByteSizeString(request)} \n{DebugString(request.downloadHandler.data)}");
-                return request.downloadHandler.data;
-            }
+
+            Debug.Log($"[{type.Nick()}] {method} {request.url} {ByteSizeString(request)} \n{DebugString(request.downloadHandler.data)}");
+            return request;
         }
         #endregion
     }
