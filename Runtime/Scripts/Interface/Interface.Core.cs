@@ -78,4 +78,12 @@ namespace Trackman
         T Read<T>(string path, T defaultValue = default);
         #endregion
     }
+
+    public interface IEvent
+    {
+        #region Properties
+        int Order => 0;
+        bool CanExecute => true;
+        #endregion
+    }
 }
