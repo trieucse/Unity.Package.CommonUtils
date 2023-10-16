@@ -11,6 +11,7 @@ namespace Trackman
     {
         #region Properties
         MonoBehaviour MonoBehavior => this.As<MonoBehaviour>();
+        GameObject GameObject => MonoBehavior.gameObject;
         #endregion
     }
 
