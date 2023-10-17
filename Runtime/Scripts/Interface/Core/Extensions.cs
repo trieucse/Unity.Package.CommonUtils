@@ -78,6 +78,10 @@ namespace Trackman
         {
             foreach (T element in enumerable) action(element);
         }
+        public static void ForEach<T, U>(this IEnumerable<T> enumerable, Action<T, U> action, U argument)
+        {
+            foreach (T element in enumerable) action(element, argument);
+        }
         public static int IndexOf<T>(this IEnumerable<T> enumerable, T value)
         {
             int index = 0;

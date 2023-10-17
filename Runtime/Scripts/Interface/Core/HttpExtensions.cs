@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -12,12 +13,14 @@ namespace Trackman
     public static class HttpExtensions
     {
         public const int defaultTimeout = 30;
+        public const int saneDumpLength = 4096;
         public const string requestSucceeded = "ok";
         public const string sentOk = "Sent";
         public const string receivedOk = "Received";
 
         #region Fields
         static readonly List<UnityWebRequest> webRequests = new(16);
+        static readonly StringBuilder debugString = new(1024);
         #endregion
 
         #region Properties
@@ -28,29 +31,39 @@ namespace Trackman
         #region Methods
         public static async Task<byte[]> HttpGetAsync(this string url, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
         {
-            UnityWebRequest request = await url.HttpMethodAsync("GET", null, headers, responseHeaders, contentType, type, timeout, cancellationToken);
+            UnityWebRequest request = await url.HttpMethodAsync("GET", null, null, headers, responseHeaders, contentType, type, timeout, cancellationToken);
             return request.downloadHandler.data;
         }
         public static async Task<byte[]> HttpPostAsync(this string url, byte[] post, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
         {
-            UnityWebRequest request = await url.HttpMethodAsync("POST", post, headers, responseHeaders, contentType, type, timeout, cancellationToken);
+            UnityWebRequest request = await url.HttpMethodAsync("POST", post, null, headers, responseHeaders, contentType, type, timeout, cancellationToken);
+            return request.downloadHandler.data;
+        }
+        public static async Task<byte[]> HttpPostAsync(this string url, NativeArray<byte> post, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
+        {
+            UnityWebRequest request = await url.HttpMethodAsync("POST", null, post, headers, responseHeaders, contentType, type, timeout, cancellationToken);
             return request.downloadHandler.data;
         }
         public static async Task<byte[]> HttpPutAsync(this string url, byte[] post, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
         {
-            UnityWebRequest request = await url.HttpMethodAsync("PUT", post, headers, responseHeaders, contentType, type, timeout, cancellationToken);
+            UnityWebRequest request = await url.HttpMethodAsync("PUT", post, null, headers, responseHeaders, contentType, type, timeout, cancellationToken);
+            return request.downloadHandler.data;
+        }
+        public static async Task<byte[]> HttpPutAsync(this string url, NativeArray<byte> post, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
+        {
+            UnityWebRequest request = await url.HttpMethodAsync("PUT", null, post, headers, responseHeaders, contentType, type, timeout, cancellationToken);
             return request.downloadHandler.data;
         }
         public static Task HttpDeleteAsync(this string url, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
         {
-            return url.HttpMethodAsync("DELETE", null, headers, responseHeaders, null, type, timeout, cancellationToken);
+            return url.HttpMethodAsync("DELETE", null, null, headers, responseHeaders, null, type, timeout, cancellationToken);
         }
-
         public static Task<UnityWebRequest> HttpGetRequestAsync(this string url, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
         {
-            return url.HttpMethodAsync("GET", null, headers, responseHeaders, contentType, type, timeout, cancellationToken);
+            return url.HttpMethodAsync("GET", null, null, headers, responseHeaders, contentType, type, timeout, cancellationToken);
         }
-        static async Task<UnityWebRequest> HttpMethodAsync(this string url, string method, byte[] post = default, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
+
+        static async Task<UnityWebRequest> HttpMethodAsync(this string url, string method, byte[] bytes = default, NativeArray<byte>? nativeArray = default, IDictionary<string, string> headers = default, IDictionary<string, string> responseHeaders = default, string contentType = default, string type = "Http", int timeout = defaultTimeout, CancellationToken cancellationToken = default)
         {
             string DebugString(byte[] response = default)
             {
@@ -58,41 +71,28 @@ namespace Trackman
                 {
                     if (bytes is null) return "null";
                     bool textContent = (headers is not null && headers.TryGetValue("Content-Type", out string value) && value.Contains("Application/json")) || (contentType.NotNullOrEmpty() && contentType.Contains("Application/json"));
-                    return textContent ? Encoding.UTF8.GetString(bytes) : $"<binary {bytes.Length} bytes>";
+                    return textContent && bytes.Length < saneDumpLength ? Encoding.UTF8.GetString(bytes) : $"<binary {bytes.Length} bytes>";
                 }
 
-                string headersString = "";
-                if (headers is not null)
-                {
-                    headersString = "HEADERS:\n";
-                    foreach (KeyValuePair<string, string> header in headers) headersString += $"{header.Key}: {header.Value}\n";
-                    if (contentType.NotNullOrEmpty()) headersString += $"Content-Type: {contentType}\n";
-                }
-                else if (contentType.NotNullOrEmpty())
-                {
-                    headersString = "HEADERS:\n";
-                    if (contentType.NotNullOrEmpty()) headersString += $"Content-Type: {contentType}\n";
-                }
+                debugString.Clear();
 
-                string postString = "";
-                if (post is not null && post.Length < 4096) postString = $"POST:\n{PrettyPrintBytes(post, headers)}\n";
+                if (headers is not null || contentType.NotNullOrEmpty()) debugString.AppendLine("HEADERS:");
 
-                string responseHeadersString = "";
+                headers?.ForEach((header, debugString) => debugString.AppendLine($"{header.Key}: {header.Value}"), debugString);
+                if (contentType.NotNullOrEmpty()) debugString.AppendLine($"Content-Type: {contentType}");
+
+                if (bytes is not null) debugString.AppendLine($"POST:\n{PrettyPrintBytes(bytes, headers)}");
+                else if (nativeArray is not null) debugString.AppendLine($"POST:\n<binary {nativeArray.Value.Length} bytes>");
+
                 if (responseHeaders is not null)
                 {
-                    responseHeadersString = "RESPONSE HEADERS:\n";
-                    foreach (KeyValuePair<string, string> header in responseHeaders) responseHeadersString += $"{header.Key}: {header.Value}\n";
+                    debugString.AppendLine("RESPONSE HEADERS:");
+                    responseHeaders.ForEach((header, debugString) => debugString.AppendLine($"{header.Key}: {header.Value}"), debugString);
                 }
 
-                string responseString = "";
-                if (response is not null && response.Length < 4096) responseString = $"RESPONSE:\n{PrettyPrintBytes(response, responseHeaders)}\n";
+                if (response is not null) debugString.AppendLine($"RESPONSE:\n{PrettyPrintBytes(response, responseHeaders)}");
 
-                string text = "";
-                if (headers is not null) text += headersString;
-                if (post is not null) text += postString;
-                if (responseHeaders is not null) text += responseHeadersString;
-                if (response is not null) text += responseString;
-                return text;
+                return debugString.ToString();
             }
             string ByteSizeString(UnityWebRequest value)
             {
@@ -105,10 +105,11 @@ namespace Trackman
 
             UnityWebRequest request = new(url, method, new DownloadHandlerBuffer(), default) { timeout = timeout };
 
-            if (headers is not null)
-                foreach (KeyValuePair<string, string> header in headers)
-                    request.SetRequestHeader(header.Key, header.Value);
-            if (post is not null) request.uploadHandler = new UploadHandlerRaw(post);
+            headers?.ForEach((header, request) => request.SetRequestHeader(header.Key, header.Value), request);
+
+            if (bytes is not null) request.uploadHandler = new UploadHandlerRaw(bytes);
+            else if (nativeArray is not null) request.uploadHandler = new UploadHandlerRaw(nativeArray.Value, false);
+
             if (contentType.NotNullOrEmpty()) request.SetRequestHeader("Content-Type", contentType);
 
             webRequests.Add(request);
@@ -122,13 +123,11 @@ namespace Trackman
             }
             finally
             {
-                webRequests.Remove(request);
+                webRequests.RemoveFast(request);
                 request.uploadHandler?.Dispose();
             }
 
-            if (responseHeaders is not null)
-                foreach (KeyValuePair<string, string> keyValue in request.GetResponseHeaders())
-                    responseHeaders.Add(keyValue);
+            responseHeaders?.ForEach((header, responseHeaders) => responseHeaders.Add(header), responseHeaders);
 
             if (request.result != UnityWebRequest.Result.Success)
             {
