@@ -15,6 +15,18 @@ namespace Trackman
         #endregion
     }
 
+    public interface IMonoBehaviourInjectable : IMonoBehaviour
+    {
+    }
+
+    public interface IMonoBehaviourCollectionItem : IMonoBehaviour
+    {
+    }
+
+    public interface ISingletonInjectable : IMonoBehaviour
+    {
+    }
+
     public interface IClassName
     {
         #region Properties
