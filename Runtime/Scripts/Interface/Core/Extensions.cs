@@ -27,10 +27,7 @@ namespace Trackman
         {
             if (buffer is not null && buffer.IsValid()) buffer.Release();
         }
-        public static T OrNull<T>(this T unityObject) where T : Object
-        {
-            return unityObject ? unityObject : null;
-        }
+        public static T OrNull<T>(this T unityObject) where T : Object => unityObject ? unityObject : null;
 
         public static bool ValidIndex(this int value) => value != -1;
         public static bool NotMaxValue(this uint value) => value != uint.MaxValue;
@@ -48,20 +45,15 @@ namespace Trackman
         public static bool Zero(this Vector2 value) => value == Vector2.zero;
         public static bool Zero(this IntPtr value) => value == IntPtr.Zero;
 
-        public static T As<T>(this object value)
-        {
-            return (T)value;
-        }
-        public static int AsInt<T>(this T value) where T : struct, Enum
-        {
-            return (int)(object)value;
-        }
-        public static T AsEnum<T>(this object value) where T : struct, Enum
-        {
-            if (value is T enumValue) return enumValue;
-            if (value is string stringValue) return (T)Enum.Parse(typeof(T), stringValue);
-            throw new ArgumentException();
-        }
+        public static T As<T>(this object value) => (T)value;
+        public static int AsInt<T>(this T value) where T : struct, Enum => (int)(object)value;
+        public static T AsEnum<T>(this object value) where T : struct, Enum =>
+            value switch
+            {
+                T enumValue => enumValue,
+                string stringValue => (T)Enum.Parse(typeof(T), stringValue),
+                _ => throw new ArgumentException()
+            };
 
         public static bool ANY<T>(this T value, T arg) where T : Enum => Convert.ToInt32(value).ANY(Convert.ToInt32(arg));
         public static bool ANY(this int value, int arg) => (value & arg) != 0;
@@ -70,10 +62,7 @@ namespace Trackman
         public static T AddFlag<T>(this T value, T arg) where T : Enum => (T)Enum.ToObject(typeof(T), Convert.ToInt32(value) | Convert.ToInt32(arg));
         public static T RemoveFlag<T>(this T value, T arg) where T : Enum => (T)Enum.ToObject(typeof(T), Convert.ToInt32(value) & ~Convert.ToInt32(arg));
 
-        public static IEnumerable<(T item, int index)> Indexed<T>(this IEnumerable<T> enumerable)
-        {
-            return enumerable.Select((item, index) => (item, index));
-        }
+        public static IEnumerable<(T item, int index)> Indexed<T>(this IEnumerable<T> enumerable) => enumerable.Select((item, index) => (item, index));
         public static void ForEach<T>(this IEnumerable<T> enumerable, Action<T> action)
         {
             foreach (T element in enumerable) action(element);
@@ -104,43 +93,21 @@ namespace Trackman
 
             return -1;
         }
-        public static IEnumerable<T> Concat<T>(this IEnumerable<T> enumerable, T item)
-        {
-            IEnumerable<T> GetItem()
-            {
-                yield return item;
-            }
-
-            return enumerable.Union(GetItem());
-        }
-        public static IEnumerable<T> Except<T>(this IEnumerable<T> enumerable, T item)
-        {
-            IEnumerable<T> GetItem()
-            {
-                yield return item;
-            }
-
-            return enumerable.Except(GetItem());
-        }
+        public static IEnumerable<T> Concat<T>(this IEnumerable<T> enumerable, T item) => enumerable.Union(item.Once());
+        public static IEnumerable<T> Except<T>(this IEnumerable<T> enumerable, T item) => enumerable.Except(item.Once());
         public static IEnumerable<T> Once<T>(this T value)
         {
             yield return value;
         }
 
-        public static bool IsRecord(this Type type) => (type?.Name?.EndsWith("Record") ?? false) || (type?.Namespace?.EndsWith("DataModel") ?? false);
+        public static bool IsRecord(this Type type) => (type?.Name.EndsWith("Record") ?? false) || (type?.Namespace?.EndsWith("DataModel") ?? false);
 
         public static string PrettyTypeName(this Type type) => $"{(type.IsGenericType ? type.Name.Substring(0, type.Name.IndexOf('`')) : type.Name)}{(type.IsGenericType ? $"<{string.Join(",", type.GenericTypeArguments.Select(x => x.PrettyTypeName()))}>" : "")}";
         #endregion
 
         #region Math Methods
-        public static Vector3 ToXZ(this Vector3 value, float y = 0.0f)
-        {
-            return new Vector3(value.x, y, value.z);
-        }
-        public static Vector3 ToDirectionXZ(this Vector3 value)
-        {
-            return value.ToXZ().normalized;
-        }
+        public static Vector3 ToXZ(this Vector3 value, float y = 0) => new(value.x, y, value.z);
+        public static Vector3 ToDirectionXZ(this Vector3 value) => value.ToXZ().normalized;
         public static Vector3 ToDirectionXZ(this Vector3 value, Vector3 target)
         {
             Vector3 temp = value;
@@ -172,15 +139,9 @@ namespace Trackman
 
             return sum > 0;
         }
-        public static int ToDigit(this bool value)
-        {
-            return value ? 1 : 0;
-        }
-        public static int ToSign(this bool value)
-        {
-            return value ? 1 : -1;
-        }
-        public static Vector3 ToVector3<T>(this IReadOnlyList<T> value) => new (value[0].As<float>(), value[1].As<float>(), value[2].As<float>());
+        public static int ToDigit(this bool value) => value ? 1 : 0;
+        public static int ToSign(this bool value) => value ? 1 : -1;
+        public static Vector3 ToVector3(this IReadOnlyList<float> value) => new (value[0], value[1], value[2]);
         #endregion
 
         #region List Methods
