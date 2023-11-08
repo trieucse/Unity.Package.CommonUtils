@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace Trackman
 {
+    [ExecuteInEditMode]
     [DebuggerStepThrough]
     public abstract class InjectSingleton<TClass, TInterface> : MonoBehaviour, ISingletonInjectable where TClass : MonoBehaviour, TInterface where TInterface : ISingletonInjectable
     {
@@ -11,7 +12,7 @@ namespace Trackman
         #endregion
 
         #region Properties
-        public static TInterface I => instance;
+        public static TInterface I => instance.OrNull() ?? (instance = FindObjectOfType<TClass>());
         #endregion
 
          #region Methods
