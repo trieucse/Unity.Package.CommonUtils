@@ -1,10 +1,9 @@
 using UnityEditor;
 using UnityEditor.Compilation;
-using UnityEngine;
 
 namespace Trackman.Editor.Core
 {
-    public class RecompileUtils : MonoBehaviour
+    public static class RecompileUtils
     {
         #region Methods
         [MenuItem("Trackman/Recompile scripts %r")]
