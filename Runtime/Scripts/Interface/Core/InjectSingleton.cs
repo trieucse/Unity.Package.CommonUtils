@@ -14,7 +14,7 @@ namespace Trackman
         public static TInterface I => instance.OrNull() ?? (instance = FindObjectOfType<TClass>());
         #endregion
 
-         #region Methods
+        #region Methods
         protected virtual void Awake()
         {
             instance = (TClass)(object)this;
